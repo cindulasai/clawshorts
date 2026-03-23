@@ -117,12 +117,23 @@ cmd_stop() {
 }
 
 cmd_install() {
+    # Create bin symlink so `shorts` works from anywhere
+    local bin_dir="/opt/homebrew/bin"
+    local symlink="${bin_dir}/shorts"
+    if [[ ! -L "$symlink" ]] && [[ ! -e "$symlink" ]]; then
+        if ln -s "$SCRIPT_DIR/clawshorts.sh" "$symlink" 2>/dev/null; then
+            echo "✅ Linked: shorts → $symlink"
+        else
+            echo "⚠️  Could not create $symlink (need sudo?) — add $SCRIPT_DIR to your PATH instead"
+        fi
+    fi
+
     if [[ "$(uname)" == "Darwin" ]]; then
         _install_launchd
     else
         _install_systemd
     fi
-    
+
     # Verify installation
     echo ""
     echo "Running verification..."
