@@ -1,126 +1,52 @@
 ---
 name: clawshorts
-description: Block YouTube Shorts on Fire TV. Set your daily limit, get blocked when exceeded. Built for OpenClaw.
-metadata:
-  {
-    "openclaw": { 
-      "emoji": "📺", 
-      "requires": { 
-        "anyBins": ["adb"],
-        "python3": true 
-      } 
-    },
-  }
+description: Block YouTube Shorts on Fire TV. Use when asked to check, manage, or configure YouTube Shorts limiting on Buck's Fire TV devices. Triggers on requests like "check shorts quota", "reset shorts", "shorts status", "how much shorts watched today", "stop shorts limiter", "start shorts limiter".
 ---
 
-# 📺 ClawShorts — Block YouTube Shorts on Fire TV
+# ClawShorts
 
-Set a daily limit for YouTube Shorts on your Fire TV. When you hit it, YouTube closes automatically. Resets at midnight.
+YouTube Shorts limiter for Fire TV. Monitors watch time per device and auto-blocks when daily limit is reached.
 
----
+## Invocation
 
-## Setup (5 minutes)
-
-### 1. Find Your Fire TV IP
-**Settings → My Fire TV → About → Network** → note the IP (e.g. `192.168.1.100`)
-
-### 2. Enable ADB Debugging
-**Settings → My Fire TV → Developer Options** → turn ON **ADB Debugging**
-
-> ⚠️ **Security:** ADB gives full control over your Fire TV. Only use on a **trusted home network**.
-
-### 3. Install
+**Primary entry point:**
 ```bash
-shorts setup 192.168.1.100
-shorts install
+~/.openclaw/workspace/skills/clawshorts/scripts/clawshorts.sh <command>
 ```
-
-That's it — the daemon auto-starts and begins enforcing your limit.
-
----
-
-## Set Your Daily Limit
-
-Default is **300 seconds (5 minutes)** per day.
-
-```bash
-shorts install 600   # 10 minutes/day
-shorts install 1800  # 30 minutes/day
-```
-
----
 
 ## Commands
 
-| Command | What it does |
+| Command | When to use |
 |---------|-------------|
-| `shorts status` | Check today's usage right now |
-| `shorts reset` | Reset today's counter to 0 |
-| `shorts stop` | Pause the limiter |
-| `shorts start` | Resume the limiter |
-| `shorts uninstall` | Remove completely |
-| `shorts history` | Show watch history (last 30 days) |
-| `shorts logs` | Show debug logs (last 50 lines) |
-| `shorts setup <IP> [NAME]` | First-time setup |
-| `shorts add <IP> [NAME]` | Add another device |
-| `shorts list` | List all devices |
-| `shorts connect <IP>` | Connect via ADB |
-| `shorts enable <IP>` | Enable a device |
-| `shorts disable <IP>` | Disable a device |
+| `status` | Check today's usage, remaining quota, daemon health |
+| `reset [IP]` | Reset today's counter (all devices or specific IP) |
+| `start` | Start the daemon if not running |
+| `stop` | Stop the daemon |
+| `history [days]` | Show watch history (default 30 days) |
+| `logs [N]` | Show last N daemon log lines (default 50) |
+| `list` | List all configured devices |
+| `setup <IP> [NAME]` | First-time setup for a new device |
+| `add <IP> [NAME]` | Add another Fire TV |
+| `connect <IP>` | Connect ADB to device |
+| `enable <IP>` / `disable <IP>` | Enable/disable a device |
 
----
+## Detection Logic
 
-## How Detection Works
+- Poll interval: 3 seconds via ADB
+- Shorts: ~45% screen width (portrait aspect)
+- Regular video: ~100% screen width
+- Home/browse: no video active
+- Only actual Shorts playback counts toward limit
 
-ClawShorts watches what you're watching via ADB — every 3 seconds:
+## Data Locations
 
-- **Shorts playing** → ~45% screen width, portrait → **counts**
-- **Regular video** → ~100% screen width → **doesn't count**
-- **YouTube home / browse** → no video active → **doesn't count**
-- **Other apps / Fire TV home** → **doesn't count**
+- Device config + history: `~/.clawshorts/clawshorts.db` (SQLite)
+- Daemon log: `~/.clawshorts/daemon.log`
+- LaunchAgent: `~/Library/LaunchAgents/com.fink.clawshorts.plist`
 
-Only actual Shorts playback counts toward your daily limit.
+## Requirements
 
----
-
-## Troubleshooting
-
-**Daemon not running:**
-```bash
-shorts start
-```
-
-**Check live status:**
-```bash
-shorts status
-```
-
-**View debug log:**
-```bash
-tail ~/.clawshorts/daemon.log
-```
-
-**ADB not found — install it:**
-```bash
-brew install android-platform-tools  # Mac
-sudo apt install adb                # Linux
-```
-
----
-
-## Multiple Fire TVs?
-
-Add more IPs separated by commas:
-```bash
-shorts setup 192.168.1.100,192.168.1.101
-shorts install
-```
-
----
-
-## What Gets Installed
-
-**Runtime files** (in your home folder):
-- `~/.clawshorts/clawshorts.db` — watch history
-- `~/.clawshorts/daemon.log` — debug log
-- `~/Library/LaunchAgents/com.fink.clawshorts.plist` — auto-start (Mac)
+- `adb` (Android platform tools)
+- Python 3
+- Fire TV with ADB debugging enabled
+- `shorts` symlink at `/opt/homebrew/bin/shorts`
