@@ -116,10 +116,12 @@ cmd_stop() {
         echo "Daemon not running"
         return 0
     fi
-    # Graceful shutdown: SIGTERM first, wait 2s, then SIGKILL
+    # Graceful shutdown: SIGTERM first, wait 2s, then SIGKILL only if still alive
     kill -TERM $pids 2>/dev/null || true
     sleep 2
-    pkill -f "clawshorts-daemon" 2>/dev/null || true
+    for pid in $pids; do
+        kill -0 "$pid" 2>/dev/null && kill -9 "$pid"
+    done
     echo "✅ Stopped"
 }
 

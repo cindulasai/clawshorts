@@ -1,6 +1,7 @@
 """Shared validators for ClawShorts."""
 from __future__ import annotations
 
+import ipaddress
 import re
 from typing import Any
 
@@ -8,17 +9,22 @@ __all__ = ["validate_ipv4", "validate_ip", "ip_to_slug"]
 
 
 def validate_ipv4(ip: str) -> bool:
-    """Validate an IPv4 address.
+    """Validate an IPv4 address is a reachable private IP.
 
     Returns True if the string is a valid dotted-quad IPv4 address
-    where every octet is in the range 0-255.
+    where every octet is in the range 0-255 AND the address is a
+    private (RFC 1918) or loopback address.
+
+    Rejects public IPs to prevent accidentally targeting
+    unrelated hosts on the internet.
     """
     if not isinstance(ip, str):
         return False
-    pattern = r"^(\d{1,3}\.){3}\d{1,3}$"
-    if not re.match(pattern, ip):
+    try:
+        addr = ipaddress.ip_address(ip)
+        return addr.is_private or addr.is_loopback
+    except ValueError:
         return False
-    return all(0 <= int(o) <= 255 for o in ip.split("."))
 
 
 def ip_to_slug(ip: str) -> str:

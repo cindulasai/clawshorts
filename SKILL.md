@@ -86,3 +86,9 @@ shorts detect <IP>              # re-detect screen via ADB
 - Python 3
 - Fire TV with ADB debugging enabled
 - `shorts` symlink at `/opt/homebrew/bin/shorts` (optional)
+
+## ⚠️ Security Notes
+
+**ADB has no built-in authentication.** Only enable ADB Debugging on a **trusted, password-protected home network**. Never on public WiFi. Anyone on the same network with ADB enabled can connect to your Fire TV.
+
+**This tool only accepts private IP addresses** (10.x.x.x, 172.16–31.x.x, 192.168.x.x). Public IPs are rejected to prevent accidental targeting of unrelated hosts.
