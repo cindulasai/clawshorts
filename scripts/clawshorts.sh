@@ -21,6 +21,24 @@ LOG_FILE="${HOME}/.clawshorts.log"
 # Default config
 DEFAULT_LIMIT=300
 
+# ---------- IP validation (bash fallback — Python does the real check) ----------
+# Rejects: empty, non-numeric, octets >255, and obvious non-private IPs.
+# Covers the common cases: 192.168.x.x, 10.x.x.x, 172.16–31.x.x
+validate_ip_bash() {
+    local ip="$1"
+    local re='^([0-9]{1,3}\.){3}[0-9]{1,3}$'
+    [[ "$ip" =~ $re ]] || return 1
+    local IFS='.' && set -- $ip
+    # shellcheck disable=SC2086
+    [[ $1 -le 255 && $2 -le 255 && $3 -le 255 && $4 -le 255 ]] || return 1
+    # Private-range quick check (rough — Python addr.is_private is authoritative)
+    if [[ $1 -eq 10 ]]; then return 0; fi
+    if [[ $1 -eq 172 && $2 -ge 16 && $2 -le 31 ]]; then return 0; fi
+    if [[ $1 -eq 192 && $2 -eq 168 ]]; then return 0; fi
+    if [[ $1 -eq 127 ]]; then return 0; fi
+    return 1
+}
+
 # ============ PYTHON CLI ============
 run_python_cli() {
     local cmd="$1"
@@ -30,10 +48,20 @@ run_python_cli() {
 
 # ============ COMMANDS THAT USE PYTHON ============
 cmd_setup() {
+    local ip="${1:-}"
+    if [[ -z "$ip" ]] || ! validate_ip_bash "$ip"; then
+        echo "Error: valid private IP required (e.g. 192.168.1.100)"
+        return 1
+    fi
     run_python_cli setup "$@"
 }
 
 cmd_add() {
+    local ip="${1:-}"
+    if [[ -z "$ip" ]] || ! validate_ip_bash "$ip"; then
+        echo "Error: valid private IP required (e.g. 192.168.1.100)"
+        return 1
+    fi
     run_python_cli add "$@"
 }
 
@@ -100,6 +128,11 @@ install_adb() {
 }
 
 cmd_connect() {
+    local ip="${1:-}"
+    if [[ -z "$ip" ]] || ! validate_ip_bash "$ip"; then
+        echo "Error: valid private IP required (e.g. 192.168.1.100)"
+        return 1
+    fi
     run_python_cli connect "$@"
 }
 
