@@ -1,0 +1,44 @@
+# Byte-compiled / optimized Python files
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python egg metadata
+*.egg-info/
+
+# SQLite databases (user data — not distributed)
+*.db
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# LaunchAgent plist (installed locally)
+*.plist
+
+# Local state (user-specific)
+.clawshorts/
+state-*.txt
+session-*.txt
